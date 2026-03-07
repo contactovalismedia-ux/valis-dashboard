@@ -428,16 +428,21 @@ export default function Dashboard() {
     if (!accId || !token) return;
     setRefreshing(true);
     try {
-      const [main, comp] = await Promise.all([
-        metaCall(`/act_${accId}/insights`, { fields: insightFields, time_increment: '1', limit: '90', ...getDateParams() }, token),
-        metaCall(`/act_${accId}/insights`, {
+      // Main call — si falla, mostramos el error
+      const main = await metaCall(`/act_${accId}/insights`, { fields: insightFields, time_increment: '1', limit: '90', ...getDateParams() }, token);
+      setInsights((main.data || []).map(processRow));
+      setLastUpdated(new Date());
+
+      // Comparison call — falla silenciosamente, no afecta los datos principales
+      try {
+        const comp = await metaCall(`/act_${accId}/insights`, {
           fields: insightFields, time_increment: '1', limit: '90',
           ...(compMode === 'prev' ? getPrevPeriodParams() : { date_preset: 'last_90d' }),
-        }, token),
-      ]);
-      setInsights((main.data || []).map(processRow));
-      setCompInsights((comp.data || []).map(processRow));
-      setLastUpdated(new Date());
+        }, token);
+        setCompInsights((comp.data || []).map(processRow));
+      } catch (_) {
+        setCompInsights([]);
+      }
     } catch (e) { setError(e.message); }
     finally { setRefreshing(false); }
   }, [token, datePreset, useCustom, customFrom, customTo, compMode]);
