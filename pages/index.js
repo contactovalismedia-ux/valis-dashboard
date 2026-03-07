@@ -422,7 +422,7 @@ export default function Dashboard() {
     };
   }
 
-  const insightFields = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,video_p3s_watched_actions,video_p25_watched_actions,outbound_clicks,landing_page_views,frequency';
+  const insightFields = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,video_p3s_watched_actions,outbound_clicks,landing_page_views,frequency';
 
   const loadInsights = useCallback(async (accId) => {
     if (!accId || !token) return;
