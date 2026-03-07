@@ -422,23 +422,28 @@ export default function Dashboard() {
     };
   }
 
-  const insightFields = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,frequency';
+  const insightFieldsFull = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,video_p3s_watched_actions,outbound_clicks,landing_page_views,frequency';
+  const insightFieldsBasic = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,frequency';
+
+  async function fetchInsights(accId, dateP) {
+    // Intenta con campos completos, si falla usa campos básicos
+    try {
+      return await metaCall(`/act_${accId}/insights`, { fields: insightFieldsFull, time_increment: '1', limit: '90', ...dateP }, token);
+    } catch (_) {
+      return await metaCall(`/act_${accId}/insights`, { fields: insightFieldsBasic, time_increment: '1', limit: '90', ...dateP }, token);
+    }
+  }
 
   const loadInsights = useCallback(async (accId) => {
     if (!accId || !token) return;
     setRefreshing(true);
     try {
-      // Main call — si falla, mostramos el error
-      const main = await metaCall(`/act_${accId}/insights`, { fields: insightFields, time_increment: '1', limit: '90', ...getDateParams() }, token);
+      const main = await fetchInsights(accId, getDateParams());
       setInsights((main.data || []).map(processRow));
       setLastUpdated(new Date());
 
-      // Comparison call — falla silenciosamente, no afecta los datos principales
       try {
-        const comp = await metaCall(`/act_${accId}/insights`, {
-          fields: insightFields, time_increment: '1', limit: '90',
-          ...(compMode === 'prev' ? getPrevPeriodParams() : { date_preset: 'last_90d' }),
-        }, token);
+        const comp = await fetchInsights(accId, compMode === 'prev' ? getPrevPeriodParams() : { date_preset: 'last_90d' });
         setCompInsights((comp.data || []).map(processRow));
       } catch (_) {
         setCompInsights([]);
