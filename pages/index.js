@@ -422,16 +422,20 @@ export default function Dashboard() {
     };
   }
 
-  const insightFieldsFull = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,video_p3s_watched_actions,outbound_clicks,landing_page_views,frequency';
+  // Tier 1: todos los campos (Hook Rate, Connection Rate, Landing Views, Video 3s)
+  const insightFieldsFull  = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,video_p3s_watched_actions,outbound_clicks,landing_page_views,frequency';
+  // Tier 2: sin video_p3s ni landing_page_views (algunos pixels no los reportan), pero conserva outbound_clicks para Connection Rate
+  const insightFieldsMid   = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,outbound_clicks,frequency';
+  // Tier 3: solo básico
   const insightFieldsBasic = 'date_start,spend,reach,impressions,clicks,ctr,actions,action_values,purchase_roas,frequency';
 
   async function fetchInsights(accId, dateP) {
-    // Intenta con campos completos, si falla usa campos básicos
-    try {
-      return await metaCall(`/act_${accId}/insights`, { fields: insightFieldsFull, time_increment: '1', limit: '90', ...dateP }, token);
-    } catch (_) {
-      return await metaCall(`/act_${accId}/insights`, { fields: insightFieldsBasic, time_increment: '1', limit: '90', ...dateP }, token);
+    for (const fields of [insightFieldsFull, insightFieldsMid, insightFieldsBasic]) {
+      try {
+        return await metaCall(`/act_${accId}/insights`, { fields, time_increment: '1', limit: '90', ...dateP }, token);
+      } catch (_) { continue; }
     }
+    throw new Error('No se pudo obtener insights para esta cuenta');
   }
 
   const loadInsights = useCallback(async (accId) => {
@@ -455,8 +459,15 @@ export default function Dashboard() {
   const loadBestAds = useCallback(async (accId) => {
     if (!accId || !token) return;
     try {
-      const adFields = 'name,status,creative{thumbnail_url,instagram_permalink_url},insights{spend,reach,clicks,ctr,purchase_roas,actions,impressions,video_p3s_watched_actions,video_p25_watched_actions,landing_page_views,outbound_clicks,frequency}';
-      const data = await metaCall(`/act_${accId}/ads`, { fields: adFields, limit: '50', ...getDateParams() }, token);
+      const adFieldsFull  = 'name,status,creative{thumbnail_url,instagram_permalink_url},insights{spend,reach,clicks,ctr,purchase_roas,actions,impressions,video_p3s_watched_actions,video_p25_watched_actions,landing_page_views,outbound_clicks,frequency}';
+      const adFieldsMid   = 'name,status,creative{thumbnail_url,instagram_permalink_url},insights{spend,reach,clicks,ctr,purchase_roas,actions,impressions,outbound_clicks,frequency}';
+      const adFieldsBasic = 'name,status,creative{thumbnail_url,instagram_permalink_url},insights{spend,reach,clicks,ctr,purchase_roas,actions,impressions,frequency}';
+      let data;
+      for (const adFields of [adFieldsFull, adFieldsMid, adFieldsBasic]) {
+        try { data = await metaCall(`/act_${accId}/ads`, { fields: adFields, limit: '50', ...getDateParams() }, token); break; }
+        catch (_) { continue; }
+      }
+      if (!data) return;
       const ads = (data.data || []).filter(a => a.insights?.data?.[0]).map(a => {
         const ins  = a.insights.data[0];
         const imp  = parseFloat(ins.impressions) || 1;
