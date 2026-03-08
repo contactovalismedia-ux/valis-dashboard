@@ -154,98 +154,95 @@ function KpiCard({ label, value, type, color, icon, sub, currency, delta, compLa
 }
 
 function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
+  const T = totals, C = compTotals;
   const funnels = {
     ecommerce: [
-      { label: 'Impresiones',       value: totals.impressions,     comp: compTotals?.impressions,     color: '#1a3050', metric: null },
-      { label: 'Clics en enlace',   value: totals.linkClicks,      comp: compTotals?.linkClicks,      color: '#1a4a6e', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
-      { label: 'Landing Page View', value: totals.landingPageViews,comp: compTotals?.landingPageViews,color: '#155a7a', metric: { label: 'Conn. Rate', val: totals.linkClicks > 0 ? (totals.landingPageViews / totals.linkClicks * 100) : 0, compVal: compTotals?.linkClicks > 0 ? (compTotals.landingPageViews / compTotals.linkClicks * 100) : null, type: 'percent' } },
-      { label: 'Añadir al carrito', value: totals.addToCart,       comp: compTotals?.addToCart,       color: '#0d6b82', metric: { label: '% Add to cart', val: totals.landingPageViews > 0 ? (totals.addToCart / totals.landingPageViews * 100) : 0, compVal: compTotals?.landingPageViews > 0 ? (compTotals.addToCart / compTotals.landingPageViews * 100) : null, type: 'percent' } },
-      { label: 'Compras',           value: totals.purchases,       comp: compTotals?.purchases,       color: '#00d9a3', metric: { label: '% Cierre', val: totals.addToCart > 0 ? (totals.purchases / totals.addToCart * 100) : 0, compVal: compTotals?.addToCart > 0 ? (compTotals.purchases / compTotals.addToCart * 100) : null, type: 'percent' } },
+      { label: 'Impresiones',       value: T.impressions,     comp: C?.impressions,     color: '#1e3a5f', metric: null },
+      { label: 'Clics en enlace',   value: T.linkClicks,      comp: C?.linkClicks,      color: '#1a4a7a', metric: { label: 'CTR',           val: T.impressions > 0 ? T.linkClicks / T.impressions * 100 : 0,       compVal: C?.impressions > 0 ? C.linkClicks / C.impressions * 100 : null,         type: 'percent' } },
+      { label: 'Landing Page View', value: T.landingPageViews,comp: C?.landingPageViews,color: '#155a82', metric: { label: 'Conn. Rate',    val: T.linkClicks > 0 ? T.landingPageViews / T.linkClicks * 100 : 0,  compVal: C?.linkClicks > 0 ? C.landingPageViews / C.linkClicks * 100 : null,     type: 'percent' } },
+      { label: 'Añadir al carrito', value: T.addToCart,       comp: C?.addToCart,       color: '#0d6b82', metric: { label: '% Add to cart', val: T.landingPageViews > 0 ? T.addToCart / T.landingPageViews * 100 : 0, compVal: C?.landingPageViews > 0 ? C.addToCart / C.landingPageViews * 100 : null, type: 'percent' } },
+      { label: 'Compras',           value: T.purchases,       comp: C?.purchases,       color: '#00a87a', metric: { label: '% Cierre',      val: T.addToCart > 0 ? T.purchases / T.addToCart * 100 : 0,            compVal: C?.addToCart > 0 ? C.purchases / C.addToCart * 100 : null,             type: 'percent' } },
     ],
     whatsapp: [
-      { label: 'Impresiones',    value: totals.impressions, comp: compTotals?.impressions, color: '#1a3050', metric: null },
-      { label: 'Clics',          value: totals.linkClicks,  comp: compTotals?.linkClicks,  color: '#1a4a6e', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
-      { label: 'Conversaciones', value: totals.messaging,   comp: compTotals?.messaging,   color: '#25D366', metric: { label: '% Conv/Clic', val: totals.linkClicks > 0 ? (totals.messaging / totals.linkClicks * 100) : 0, compVal: compTotals?.linkClicks > 0 ? (compTotals.messaging / compTotals.linkClicks * 100) : null, type: 'percent' } },
+      { label: 'Impresiones',    value: T.impressions, comp: C?.impressions, color: '#1e3a5f', metric: null },
+      { label: 'Clics',          value: T.linkClicks,  comp: C?.linkClicks,  color: '#1a4a7a', metric: { label: 'CTR',              val: T.impressions > 0 ? T.linkClicks / T.impressions * 100 : 0,    compVal: C?.impressions > 0 ? C.linkClicks / C.impressions * 100 : null,   type: 'percent' } },
+      { label: 'Conversaciones', value: T.messaging,   comp: C?.messaging,   color: '#25D366', metric: { label: 'Tasa Conv.',       val: T.linkClicks > 0 ? T.messaging / T.linkClicks * 100 : 0,       compVal: C?.linkClicks > 0 ? C.messaging / C.linkClicks * 100 : null,      type: 'percent' } },
     ],
     leads: [
-      { label: 'Impresiones',       value: totals.impressions,     comp: compTotals?.impressions,     color: '#1a3050', metric: null },
-      { label: 'Clics',             value: totals.linkClicks,      comp: compTotals?.linkClicks,      color: '#1a4a6e', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
-      { label: 'Landing Page View', value: totals.landingPageViews,comp: compTotals?.landingPageViews,color: '#155a7a', metric: { label: 'Conn. Rate', val: totals.linkClicks > 0 ? (totals.landingPageViews / totals.linkClicks * 100) : 0, compVal: compTotals?.linkClicks > 0 ? (compTotals.landingPageViews / compTotals.linkClicks * 100) : null, type: 'percent' } },
-      { label: 'Leads / Registros', value: totals.leads,           comp: compTotals?.leads,           color: '#a855f7', metric: { label: '% Conversión', val: totals.landingPageViews > 0 ? (totals.leads / totals.landingPageViews * 100) : 0, compVal: compTotals?.landingPageViews > 0 ? (compTotals.leads / compTotals.landingPageViews * 100) : null, type: 'percent' } },
+      { label: 'Impresiones',       value: T.impressions,     comp: C?.impressions,     color: '#1e3a5f', metric: null },
+      { label: 'Clics',             value: T.linkClicks,      comp: C?.linkClicks,      color: '#1a4a7a', metric: { label: 'CTR',           val: T.impressions > 0 ? T.linkClicks / T.impressions * 100 : 0,      compVal: C?.impressions > 0 ? C.linkClicks / C.impressions * 100 : null,        type: 'percent' } },
+      { label: 'Landing Page View', value: T.landingPageViews,comp: C?.landingPageViews,color: '#155a82', metric: { label: 'Conn. Rate',    val: T.linkClicks > 0 ? T.landingPageViews / T.linkClicks * 100 : 0, compVal: C?.linkClicks > 0 ? C.landingPageViews / C.linkClicks * 100 : null,    type: 'percent' } },
+      { label: 'Leads / Registros', value: T.leads,           comp: C?.leads,           color: '#a855f7', metric: { label: '% Conversión',  val: T.landingPageViews > 0 ? T.leads / T.landingPageViews * 100 : 0, compVal: C?.landingPageViews > 0 ? C.leads / C.landingPageViews * 100 : null,  type: 'percent' } },
     ],
     reach: [
-      { label: 'Impresiones',    value: totals.impressions, comp: compTotals?.impressions, color: '#1a3050', metric: null },
-      { label: 'Alcance',        value: totals.reach,       comp: compTotals?.reach,       color: '#1a4a6e', metric: { label: 'Freq.', val: totals.reach > 0 ? (totals.impressions / totals.reach) : 0, compVal: compTotals?.reach > 0 ? (compTotals.impressions / compTotals.reach) : null, type: 'number' } },
-      { label: 'Video 3s',       value: totals.video3s,     comp: compTotals?.video3s,     color: '#2a5a8a', metric: { label: 'Hook Rate', val: totals.impressions > 0 ? (totals.video3s / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.video3s / compTotals.impressions * 100) : null, type: 'percent' } },
-      { label: 'Clics salientes',value: totals.linkClicks,  comp: compTotals?.linkClicks,  color: '#00d9a3', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
+      { label: 'Impresiones',     value: T.impressions, comp: C?.impressions, color: '#1e3a5f', metric: null },
+      { label: 'Alcance',         value: T.reach,       comp: C?.reach,       color: '#1a4a7a', metric: { label: 'Frecuencia', val: T.reach > 0 ? T.impressions / T.reach : 0,                       compVal: C?.reach > 0 ? C.impressions / C.reach : null,                    type: 'number' } },
+      { label: 'Video 3s',        value: T.video3s,     comp: C?.video3s,     color: '#2a5a8a', metric: { label: 'Hook Rate',  val: T.impressions > 0 ? T.video3s / T.impressions * 100 : 0,         compVal: C?.impressions > 0 ? C.video3s / C.impressions * 100 : null,      type: 'percent' } },
+      { label: 'Clics salientes', value: T.linkClicks,  comp: C?.linkClicks,  color: '#00d9a3', metric: { label: 'CTR',        val: T.impressions > 0 ? T.linkClicks / T.impressions * 100 : 0,      compVal: C?.impressions > 0 ? C.linkClicks / C.impressions * 100 : null,   type: 'percent' } },
     ],
   };
 
+
   const steps = funnels[campaignType] || funnels.ecommerce;
-  const maxVal = steps[0]?.value || 1;
+  const n = steps.length;
+  // Anchos fijos decrecientes: 100% → 60% — siempre se ve como embudo sin importar los datos
+  const widths = steps.map((_, i) => Math.round(100 - i * (40 / Math.max(n - 1, 1))));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
       {steps.map((step, i) => {
-        // Cada paso es un % del ancho del contenedor, centrado
-        // Escala logarítmica para que la diferencia visual sea legible aunque los datos sean extremos
-        const rawRatio = maxVal > 0 ? step.value / maxVal : 1;
-        const logRatio = rawRatio > 0 ? (Math.log(rawRatio * 99 + 1) / Math.log(100)) : 0;
-        const pct = Math.round(55 + logRatio * 45); // rango 55%–100%
+        const w = widths[i];
         const delta = step.comp > 0 ? ((step.value - step.comp) / step.comp * 100) : null;
-        const mDelta = step.metric?.compVal > 0 ? ((step.metric.val - step.metric.compVal) / step.metric.compVal * 100) : null;
-        const isLeft  = i % 2 === 0 && i > 0;
-        const isRight = i % 2 === 1;
-        const metricNode = step.metric ? (
-          <>
+        const mVal   = step.metric?.val;
+        const mComp  = step.metric?.compVal;
+        const mDelta = mComp > 0 ? ((mVal - mComp) / mComp * 100) : null;
+        const isLeft  = step.metric && i % 2 === 0 && i > 0;
+        const isRight = step.metric && i % 2 === 1;
+
+        const MetricBlock = () => (
+          <div>
             <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
-              {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
+              {mVal > 0 ? fmt(mVal, step.metric.type) : '—'}
             </div>
-            <div style={{ fontSize: 9, color: '#4a6a8a', marginTop: 1 }}>{step.metric.label}</div>
+            <div style={{ fontSize: 9, color: '#4a6a8a', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 1 }}>{step.metric.label}</div>
             {mDelta != null && compLabel && (
-              <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+              <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a', fontWeight: 700, marginTop: 1 }}>
                 {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
               </div>
             )}
-          </>
-        ) : null;
+          </div>
+        );
 
         return (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', width: '100%', gap: 8 }}>
-
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
             {/* Métrica izquierda */}
-            <div style={{ width: 76, textAlign: 'right', flexShrink: 0 }}>
-              {isLeft && metricNode}
+            <div style={{ width: 72, textAlign: 'right', flexShrink: 0 }}>
+              {isLeft && <MetricBlock />}
             </div>
-
-            {/* Bloque centrado que se angosta */}
+            {/* Barra centrada */}
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
               <div style={{
-                width: `${pct}%`,
-                background: `linear-gradient(135deg, ${step.color}ee, ${step.color}88)`,
-                borderRadius: 8,
-                padding: '9px 16px',
+                width: `${w}%`,
+                background: `linear-gradient(135deg, ${step.color}f5 0%, ${step.color}88 100%)`,
+                borderRadius: 8, padding: '10px 14px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
-                transition: 'width 0.4s ease',
-                minWidth: 100,
+                boxShadow: `0 2px 10px ${step.color}30`,
               }}>
-                <span style={{ color: '#8aaabb', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{step.label}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                  <span style={{ color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: 'monospace' }}>{fmt(step.value)}</span>
+                <span style={{ color: '#7a9ab0', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{step.label}</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 3 }}>
+                  <span style={{ color: '#fff', fontSize: 17, fontWeight: 800, fontFamily: 'monospace' }}>{fmt(step.value)}</span>
                   {delta != null && compLabel && (
-                    <span style={{ fontSize: 9, color: delta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                    <span style={{ fontSize: 9, color: delta >= 0 ? '#00d9a3' : '#ff5a5a', fontWeight: 700 }}>
                       {delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(1)}%
                     </span>
                   )}
                 </div>
               </div>
             </div>
-
             {/* Métrica derecha */}
-            <div style={{ width: 76, flexShrink: 0 }}>
-              {isRight && metricNode}
+            <div style={{ width: 72, flexShrink: 0 }}>
+              {isRight && <MetricBlock />}
             </div>
-
           </div>
         );
       })}
@@ -893,7 +890,7 @@ export default function Dashboard() {
           )}
 
           {/* FUNNEL + 3 CHARTS */}
-          <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 14, marginBottom: 14, alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', gap: 14, marginBottom: 14, alignItems: 'start' }}>
             <div className="card">
               <p style={{ fontSize: 10, color: '#4a6a8a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
                 Embudo · {CAMPAIGN_TYPES.find(c => c.v === campaignType)?.l}
