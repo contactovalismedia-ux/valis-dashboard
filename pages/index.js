@@ -153,44 +153,83 @@ function KpiCard({ label, value, type, color, icon, sub, currency, delta, compLa
   );
 }
 
-function MarketingFunnel({ totals, campaignType }) {
+function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
   const funnels = {
     ecommerce: [
-      { label: 'Impresiones',       value: totals.impressions,     color: '#1a3050' },
-      { label: 'Clics',             value: totals.linkClicks,      color: '#1a4a6e' },
-      { label: 'Landing Page View', value: totals.landingPageViews,color: '#155a7a' },
-      { label: 'Añadir al carrito', value: totals.addToCart,       color: '#0d6b82' },
-      { label: 'Compras',           value: totals.purchases,       color: '#00d9a3' },
+      { label: 'Impresiones',       value: totals.impressions,     comp: compTotals?.impressions,     color: '#1a3050', metric: null },
+      { label: 'Clics en enlace',   value: totals.linkClicks,      comp: compTotals?.linkClicks,      color: '#1a4a6e', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
+      { label: 'Landing Page View', value: totals.landingPageViews,comp: compTotals?.landingPageViews,color: '#155a7a', metric: { label: 'Conn. Rate', val: totals.linkClicks > 0 ? (totals.landingPageViews / totals.linkClicks * 100) : 0, compVal: compTotals?.linkClicks > 0 ? (compTotals.landingPageViews / compTotals.linkClicks * 100) : null, type: 'percent' } },
+      { label: 'Añadir al carrito', value: totals.addToCart,       comp: compTotals?.addToCart,       color: '#0d6b82', metric: { label: '% Add to cart', val: totals.landingPageViews > 0 ? (totals.addToCart / totals.landingPageViews * 100) : 0, compVal: compTotals?.landingPageViews > 0 ? (compTotals.addToCart / compTotals.landingPageViews * 100) : null, type: 'percent' } },
+      { label: 'Compras',           value: totals.purchases,       comp: compTotals?.purchases,       color: '#00d9a3', metric: { label: '% Cierre', val: totals.addToCart > 0 ? (totals.purchases / totals.addToCart * 100) : 0, compVal: compTotals?.addToCart > 0 ? (compTotals.purchases / compTotals.addToCart * 100) : null, type: 'percent' } },
     ],
     whatsapp: [
-      { label: 'Impresiones',    value: totals.impressions, color: '#1a3050' },
-      { label: 'Clics',          value: totals.linkClicks,  color: '#1a4a6e' },
-      { label: 'Conversaciones', value: totals.messaging,   color: '#25D366' },
+      { label: 'Impresiones',    value: totals.impressions, comp: compTotals?.impressions, color: '#1a3050', metric: null },
+      { label: 'Clics',          value: totals.linkClicks,  comp: compTotals?.linkClicks,  color: '#1a4a6e', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
+      { label: 'Conversaciones', value: totals.messaging,   comp: compTotals?.messaging,   color: '#25D366', metric: { label: '% Conv/Clic', val: totals.linkClicks > 0 ? (totals.messaging / totals.linkClicks * 100) : 0, compVal: compTotals?.linkClicks > 0 ? (compTotals.messaging / compTotals.linkClicks * 100) : null, type: 'percent' } },
     ],
     leads: [
-      { label: 'Impresiones',       value: totals.impressions,     color: '#1a3050' },
-      { label: 'Clics',             value: totals.linkClicks,      color: '#1a4a6e' },
-      { label: 'Landing Page View', value: totals.landingPageViews,color: '#155a7a' },
-      { label: 'Leads / Registros', value: totals.leads,           color: '#a855f7' },
+      { label: 'Impresiones',       value: totals.impressions,     comp: compTotals?.impressions,     color: '#1a3050', metric: null },
+      { label: 'Clics',             value: totals.linkClicks,      comp: compTotals?.linkClicks,      color: '#1a4a6e', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
+      { label: 'Landing Page View', value: totals.landingPageViews,comp: compTotals?.landingPageViews,color: '#155a7a', metric: { label: 'Conn. Rate', val: totals.linkClicks > 0 ? (totals.landingPageViews / totals.linkClicks * 100) : 0, compVal: compTotals?.linkClicks > 0 ? (compTotals.landingPageViews / compTotals.linkClicks * 100) : null, type: 'percent' } },
+      { label: 'Leads / Registros', value: totals.leads,           comp: compTotals?.leads,           color: '#a855f7', metric: { label: '% Conversión', val: totals.landingPageViews > 0 ? (totals.leads / totals.landingPageViews * 100) : 0, compVal: compTotals?.landingPageViews > 0 ? (compTotals.leads / compTotals.landingPageViews * 100) : null, type: 'percent' } },
     ],
     reach: [
-      { label: 'Impresiones',    value: totals.impressions, color: '#1a3050' },
-      { label: 'Alcance',        value: totals.reach,       color: '#1a4a6e' },
-      { label: 'Video 3s',       value: totals.video3s,     color: '#2a5a8a' },
-      { label: 'Clics salientes',value: totals.linkClicks,  color: '#00d9a3' },
+      { label: 'Impresiones',    value: totals.impressions, comp: compTotals?.impressions, color: '#1a3050', metric: null },
+      { label: 'Alcance',        value: totals.reach,       comp: compTotals?.reach,       color: '#1a4a6e', metric: { label: 'Freq.', val: totals.reach > 0 ? (totals.impressions / totals.reach) : 0, compVal: compTotals?.reach > 0 ? (compTotals.impressions / compTotals.reach) : null, type: 'number' } },
+      { label: 'Video 3s',       value: totals.video3s,     comp: compTotals?.video3s,     color: '#2a5a8a', metric: { label: 'Hook Rate', val: totals.impressions > 0 ? (totals.video3s / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.video3s / compTotals.impressions * 100) : null, type: 'percent' } },
+      { label: 'Clics salientes',value: totals.linkClicks,  comp: compTotals?.linkClicks,  color: '#00d9a3', metric: { label: 'CTR', val: totals.impressions > 0 ? (totals.linkClicks / totals.impressions * 100) : 0, compVal: compTotals?.impressions > 0 ? (compTotals.linkClicks / compTotals.impressions * 100) : null, type: 'percent' } },
     ],
   };
+
   const steps = funnels[campaignType] || funnels.ecommerce;
   const maxVal = steps[0]?.value || 1;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {steps.map((step, i) => {
-        const width = maxVal > 0 ? Math.max((step.value / maxVal) * 100, 10) : 10;
+        // Embudo real: ancho proporcional al valor, mínimo 20%
+        const pct = maxVal > 0 ? Math.max((step.value / maxVal) * 100, 20) : 20;
+        // Delta vs comparación
+        const delta = step.comp > 0 ? ((step.value - step.comp) / step.comp * 100) : null;
+        // Delta de la métrica entre pasos
+        const mDelta = step.metric?.compVal > 0 ? ((step.metric.val - step.metric.compVal) / step.metric.compVal * 100) : null;
+
         return (
-          <div key={i} style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: `${width}%`, minWidth: 140, background: `linear-gradient(90deg, ${step.color}ee, ${step.color}88)`, borderRadius: 10, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#cde', fontSize: 11 }}>{step.label}</span>
-              <span style={{ color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{fmt(step.value)}</span>
+          <div key={i}>
+            {/* Métrica entre pasos (arriba de cada barra excepto la primera) */}
+            {step.metric && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 3, marginTop: 2 }}>
+                <span style={{ fontSize: 10, color: '#3a5a7a' }}>↓</span>
+                <span style={{ fontSize: 11, color: step.metric.val > 0 ? '#ffb340' : '#3a5a7a', fontFamily: 'monospace', fontWeight: 600 }}>
+                  {step.metric.label}: {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
+                </span>
+                {mDelta != null && compLabel && (
+                  <span style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a360' : '#ff5a5a60' }}>
+                    {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}% {compLabel}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Barra del embudo */}
+            <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+              <div style={{
+                width: `${pct}%`, minWidth: 160,
+                background: `linear-gradient(90deg, ${step.color}ee, ${step.color}88)`,
+                borderRadius: 10, padding: '9px 14px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                transition: 'width 0.4s ease',
+              }}>
+                <span style={{ color: '#cde', fontSize: 11 }}>{step.label}</span>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{fmt(step.value)}</div>
+                  {delta != null && compLabel && (
+                    <div style={{ fontSize: 9, color: delta >= 0 ? '#00d9a380' : '#ff5a5a80', marginTop: 1 }}>
+                      {delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(1)}%
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -353,6 +392,10 @@ export default function Dashboard() {
   const [selectedCampaigns, setSelectedCampaigns] = useState([]);
   const [showCampaignFilter, setShowCampaignFilter] = useState(false);
   const [compMode, setCompMode]       = useState('trend');
+  const handleCompMode = (mode) => {
+    setCompMode(mode);
+    setCompInsights([]); // reset para que no quede pegado
+  };
   const timerRef = useRef(null);
 
   async function connect(t) {
@@ -442,7 +485,12 @@ export default function Dashboard() {
     if (!accId || !token) return;
     setRefreshing(true);
     try {
-      const main = await fetchInsights(accId, getDateParams());
+      const dateP = getDateParams();
+      // Si hay campañas filtradas, agregar filtering_spec
+      if (selectedCampaigns.length > 0 && selectedCampaigns.length < campaigns.length) {
+        dateP.filtering = JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: selectedCampaigns }]);
+      }
+      const main = await fetchInsights(accId, dateP);
       setInsights((main.data || []).map(processRow));
       setLastUpdated(new Date());
 
@@ -454,7 +502,7 @@ export default function Dashboard() {
       }
     } catch (e) { setError(e.message); }
     finally { setRefreshing(false); }
-  }, [token, datePreset, useCustom, customFrom, customTo, compMode]);
+  }, [token, datePreset, useCustom, customFrom, customTo, compMode, selectedCampaigns, campaigns.length]);
 
   const loadBestAds = useCallback(async (accId) => {
     if (!accId || !token) return;
@@ -542,13 +590,17 @@ export default function Dashboard() {
   }), { spend: 0, reach: 0, impressions: 0, linkClicks: 0, landingPageViews: 0, purchases: 0, addToCart: 0, messaging: 0, video3s: 0, leads: 0 }), [insights]);
 
   const Tc = useMemo(() => compInsights.reduce((acc, d) => ({
-    spend: acc.spend + d.spend,
-    purchases: acc.purchases + d.purchases,
-    messaging: acc.messaging + d.messaging,
-    leads: acc.leads + d.leads,
-    impressions: acc.impressions + d.impressions,
-    video3s: acc.video3s + d.video3s,
-  }), { spend: 0, purchases: 0, messaging: 0, leads: 0, impressions: 0, video3s: 0 }), [compInsights]);
+    spend:            acc.spend + d.spend,
+    purchases:        acc.purchases + d.purchases,
+    messaging:        acc.messaging + d.messaging,
+    leads:            acc.leads + d.leads,
+    impressions:      acc.impressions + d.impressions,
+    video3s:          acc.video3s + d.video3s,
+    linkClicks:       acc.linkClicks + d.linkClicks,
+    landingPageViews: acc.landingPageViews + d.landingPageViews,
+    addToCart:        acc.addToCart + d.addToCart,
+    reach:            Math.max(acc.reach, d.reach),
+  }), { spend: 0, purchases: 0, messaging: 0, leads: 0, impressions: 0, video3s: 0, linkClicks: 0, landingPageViews: 0, addToCart: 0, reach: 0 }), [compInsights]);
 
   const validRoas = insights.filter(d => d.roas > 0);
   const avgRoas   = validRoas.length ? validRoas.reduce((s, d) => s + d.roas, 0) / validRoas.length : 0;
@@ -687,7 +739,7 @@ export default function Dashboard() {
                 { v: 'trend', l: compPeriod ? `Tendencia (${compPeriod.label})` : 'Tendencia (sin datos)' },
                 { v: 'prev',  l: 'vs período anterior' },
               ].map(opt => (
-                <button key={opt.v} className="ibtn" onClick={() => setCompMode(opt.v)}
+                <button key={opt.v} className="ibtn" onClick={() => handleCompMode(opt.v)}
                   style={{ borderColor: compMode === opt.v ? '#4a9eff' : '#1e2d40', color: compMode === opt.v ? '#4a9eff' : '#4a6a8a', opacity: !compPeriod && opt.v === 'trend' ? 0.4 : 1 }}>
                   {opt.l}
                 </button>
@@ -805,7 +857,7 @@ export default function Dashboard() {
               <p style={{ fontSize: 10, color: '#4a6a8a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
                 Embudo · {CAMPAIGN_TYPES.find(c => c.v === campaignType)?.l}
               </p>
-              <MarketingFunnel totals={T} campaignType={campaignType} />
+              <MarketingFunnel totals={T} compTotals={compLabel ? Tc : null} campaignType={campaignType} compLabel={compLabel} />
               <div style={{ marginTop: 16, padding: '12px 14px', background: '#0a1520', borderRadius: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {campaignType === 'ecommerce' && <><span style={{ fontSize: 11, color: '#4a6a8a' }}>CPA</span><span style={{ fontSize: 14, fontWeight: 700, color: '#00d9a3', fontFamily: 'monospace' }}>{avgCpa > 0 ? fmt(avgCpa, 'currency') : '—'}</span></>}
@@ -865,6 +917,7 @@ export default function Dashboard() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+              {insights.some(d => d.hookRate > 0 || d.connectionRate > 0) && (
               <div className="card">
                 <p style={{ fontSize: 10, color: '#4a6a8a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>Salud de los creativos</p>
                 <ResponsiveContainer width="100%" height={110}>
@@ -880,6 +933,7 @@ export default function Dashboard() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+              )}
             </div>
           </div>
 
