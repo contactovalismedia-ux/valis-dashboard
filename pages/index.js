@@ -183,55 +183,50 @@ function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
 
   const steps = funnels[campaignType] || funnels.ecommerce;
   const maxVal = steps[0]?.value || 1;
-  // Ancho de cada paso como % del contenedor (100% → ~30% mínimo)
-  const widths = steps.map(s => maxVal > 0 ? Math.max((s.value / maxVal) * 100, 28) : 28);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: '100%' }}>
       {steps.map((step, i) => {
-        const w = widths[i];
-        const wNext = widths[i + 1] ?? w;
+        // Cada paso es un % del ancho del contenedor, centrado
+        const pct = maxVal > 0 ? Math.max((step.value / maxVal) * 100, 30) : 30;
         const delta = step.comp > 0 ? ((step.value - step.comp) / step.comp * 100) : null;
         const mDelta = step.metric?.compVal > 0 ? ((step.metric.val - step.metric.compVal) / step.metric.compVal * 100) : null;
-        // clip-path trapecio: top más ancho, bottom igual al siguiente paso
-        const leftTop  = ((100 - w) / 2).toFixed(1);
-        const rightTop = (100 - leftTop).toFixed(1);
-        const leftBot  = ((100 - wNext) / 2).toFixed(1);
-        const rightBot = (100 - leftBot).toFixed(1);
-        const clip = `polygon(${leftTop}% 0%, ${rightTop}% 0%, ${rightBot}% 100%, ${leftBot}% 100%)`;
-        const isLeft = i % 2 === 0 && i > 0;
+        const isLeft  = i % 2 === 0 && i > 0;
         const isRight = i % 2 === 1;
+        const metricNode = step.metric ? (
+          <>
+            <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
+              {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
+            </div>
+            <div style={{ fontSize: 9, color: '#4a6a8a', marginTop: 1 }}>{step.metric.label}</div>
+            {mDelta != null && compLabel && (
+              <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
+              </div>
+            )}
+          </>
+        ) : null;
 
         return (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', width: '100%', minHeight: 48 }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', width: '100%', gap: 8 }}>
 
             {/* Métrica izquierda */}
-            <div style={{ flex: 1, textAlign: 'right', paddingRight: 10 }}>
-              {step.metric && isLeft && (
-                <>
-                  <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
-                    {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
-                  </div>
-                  <div style={{ fontSize: 9, color: '#4a6a8a' }}>{step.metric.label}</div>
-                  {mDelta != null && compLabel && (
-                    <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
-                      {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
-                    </div>
-                  )}
-                </>
-              )}
+            <div style={{ width: 76, textAlign: 'right', flexShrink: 0 }}>
+              {isLeft && metricNode}
             </div>
 
-            {/* Bloque trapezoidal con clip-path */}
-            <div style={{ flex: 3, position: 'relative' }}>
+            {/* Bloque centrado que se angosta */}
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
               <div style={{
-                clipPath: clip,
-                background: `linear-gradient(135deg, ${step.color}f0, ${step.color}99)`,
-                padding: '10px 20px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                minHeight: 46,
+                width: `${pct}%`,
+                background: `linear-gradient(135deg, ${step.color}ee, ${step.color}88)`,
+                borderRadius: 8,
+                padding: '9px 16px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                transition: 'width 0.4s ease',
+                minWidth: 100,
               }}>
-                <span style={{ color: '#b8cfe0', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{step.label}</span>
+                <span style={{ color: '#8aaabb', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{step.label}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                   <span style={{ color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: 'monospace' }}>{fmt(step.value)}</span>
                   {delta != null && compLabel && (
@@ -244,20 +239,8 @@ function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
             </div>
 
             {/* Métrica derecha */}
-            <div style={{ flex: 1, paddingLeft: 10 }}>
-              {step.metric && isRight && (
-                <>
-                  <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
-                    {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
-                  </div>
-                  <div style={{ fontSize: 9, color: '#4a6a8a' }}>{step.metric.label}</div>
-                  {mDelta != null && compLabel && (
-                    <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
-                      {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
-                    </div>
-                  )}
-                </>
-              )}
+            <div style={{ width: 76, flexShrink: 0 }}>
+              {isRight && metricNode}
             </div>
 
           </div>
