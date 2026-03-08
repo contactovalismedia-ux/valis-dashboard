@@ -24,10 +24,12 @@ function fmtDate(dateStr) {
 }
 
 async function metaCall(path, params, token) {
+  // Si token es '__ENV__' o vacío, el servidor usará META_TOKEN de Vercel
+  const effectiveToken = (token === '__ENV__') ? '' : token;
   const res = await fetch('/api/meta', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path, params, token }),
+    body: JSON.stringify({ path, params, token: effectiveToken }),
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error);
@@ -422,18 +424,44 @@ export default function Dashboard() {
   async function connect(t) {
     setLoading(true); setError(null);
     try {
-      const data = await metaCall('/me/adaccounts', { fields: 'name,account_id,account_status,currency,amount_spent', limit: '50' }, t);
-      const accs = data.data || [];
-      setAccounts(accs); setToken(t);
-      if (accs.length) setSelectedAcc(accs[0]);
+      const data = await metaCall('/me/adaccounts', { fields: 'name,account_id,account_status,currency,amount_spent', limit: '200' }, t);
+      const allAccs = data.data || [];
+      // Filtrar cuentas con gasto en los últimos 30 días
+      const since30 = new Date(); since30.setDate(since30.getDate() - 30);
+      const sinceStr = since30.toISOString().split('T')[0];
+      const activeAccs = [];
+      await Promise.allSettled(allAccs.map(async acc => {
+        try {
+          const ins = await metaCall(`/act_${acc.account_id}/insights`, { fields: 'spend', since: sinceStr, until: new Date().toISOString().split('T')[0] }, t);
+          const spent = parseFloat(ins.data?.[0]?.spend || 0);
+          if (spent > 0) activeAccs.push(acc);
+        } catch (_) { /* skip */ }
+      }));
+      // Ordenar igual que venían originalmente
+      const ordered = allAccs.filter(a => activeAccs.find(b => b.account_id === a.account_id));
+      setAccounts(ordered); setToken(t);
+      if (ordered.length) setSelectedAcc(ordered[0]);
       sessionStorage.setItem('valis_token', t);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   }
 
   useEffect(() => {
+    // Primero intenta con token de entorno (Vercel) — si funciona, entra sin formulario
+    async function tryEnvToken() {
+      try {
+        const data = await metaCall('/me/adaccounts', { fields: 'name,account_id,account_status,currency,amount_spent', limit: '1' }, '');
+        if (data?.data) {
+          // Hay token de entorno válido — conectar con string vacío (server usa META_TOKEN)
+          connect('__ENV__');
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
     const saved = sessionStorage.getItem('valis_token');
-    if (saved) connect(saved);
+    if (saved) { connect(saved); return; }
+    tryEnvToken();
   }, []);
 
   function getDateParams() {
@@ -819,7 +847,7 @@ export default function Dashboard() {
                         </div>
                       );
                     })}
-                    <button onClick={() => setShowCampaignFilter(false)} style={{ width: '100%', marginTop: 10, background: '#00d9a3', color: '#07101c', border: 'none', borderRadius: 8, padding: '8px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Aplicar</button>
+                    <button onClick={() => { setShowCampaignFilter(false); if (selectedAcc) { loadInsights(selectedAcc.account_id); loadBestAds(selectedAcc.account_id); } }} style={{ width: '100%', marginTop: 10, background: '#00d9a3', color: '#07101c', border: 'none', borderRadius: 8, padding: '8px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Aplicar</button>
                   </div>
                 )}
               </div>
