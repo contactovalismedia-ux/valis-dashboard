@@ -183,91 +183,83 @@ function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
 
   const steps = funnels[campaignType] || funnels.ecommerce;
   const maxVal = steps[0]?.value || 1;
-  const FULL_W = 280; // ancho máximo del embudo en px
-  const MIN_W  = 100; // ancho mínimo (último paso)
+  // Ancho de cada paso como % del contenedor (100% → ~30% mínimo)
+  const widths = steps.map(s => maxVal > 0 ? Math.max((s.value / maxVal) * 100, 28) : 28);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, width: '100%' }}>
       {steps.map((step, i) => {
-        const ratio = maxVal > 0 ? Math.max(step.value / maxVal, 0.18) : 0.18;
-        // Ancho superior e inferior para forma de trapecio real
-        const thisW = Math.round(MIN_W + (FULL_W - MIN_W) * ratio);
-        const nextStep = steps[i + 1];
-        const nextRatio = nextStep && maxVal > 0 ? Math.max(nextStep.value / maxVal, 0.18) : null;
-        const nextW = nextRatio != null ? Math.round(MIN_W + (FULL_W - MIN_W) * nextRatio) : thisW;
+        const w = widths[i];
+        const wNext = widths[i + 1] ?? w;
         const delta = step.comp > 0 ? ((step.value - step.comp) / step.comp * 100) : null;
         const mDelta = step.metric?.compVal > 0 ? ((step.metric.val - step.metric.compVal) / step.metric.compVal * 100) : null;
+        // clip-path trapecio: top más ancho, bottom igual al siguiente paso
+        const leftTop  = ((100 - w) / 2).toFixed(1);
+        const rightTop = (100 - leftTop).toFixed(1);
+        const leftBot  = ((100 - wNext) / 2).toFixed(1);
+        const rightBot = (100 - leftBot).toFixed(1);
+        const clip = `polygon(${leftTop}% 0%, ${rightTop}% 0%, ${rightBot}% 100%, ${leftBot}% 100%)`;
         const isLeft = i % 2 === 0 && i > 0;
         const isRight = i % 2 === 1;
 
         return (
-          <div key={i} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {/* Trapecio SVG + contenido */}
-            <div style={{ position: 'relative', width: FULL_W + 180, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', width: '100%', minHeight: 48 }}>
 
-              {/* Métrica izquierda */}
-              <div style={{ width: 90, textAlign: 'right', paddingRight: 10, flexShrink: 0, minHeight: 44, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                {step.metric && isLeft && (
-                  <>
-                    <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
-                      {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
-                    </div>
-                    <div style={{ fontSize: 9, color: '#4a6a8a', lineHeight: 1.3 }}>{step.metric.label}</div>
-                    {mDelta != null && compLabel && (
-                      <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
-                        {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Trapecio con texto */}
-              <div style={{ position: 'relative', width: FULL_W, flexShrink: 0 }}>
-                <svg width={FULL_W} height={44} style={{ display: 'block' }}>
-                  <defs>
-                    <linearGradient id={`g${i}`} x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor={step.color} stopOpacity="0.95"/>
-                      <stop offset="100%" stopColor={step.color} stopOpacity="0.6"/>
-                    </linearGradient>
-                  </defs>
-                  <polygon
-                    points={`${(FULL_W-thisW)/2},2 ${(FULL_W+thisW)/2},2 ${(FULL_W+nextW)/2},42 ${(FULL_W-nextW)/2},42`}
-                    fill={`url(#g${i})`}
-                    rx="4"
-                  />
-                </svg>
-                {/* Texto sobre el trapecio */}
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 44, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                  <span style={{ color: '#cbd8e8', fontSize: 10, letterSpacing: '0.05em' }}>{step.label}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ color: '#fff', fontSize: 15, fontWeight: 800, fontFamily: 'monospace' }}>{fmt(step.value)}</span>
-                    {delta != null && compLabel && (
-                      <span style={{ fontSize: 9, color: delta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
-                        {delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(1)}%
-                      </span>
-                    )}
+            {/* Métrica izquierda */}
+            <div style={{ flex: 1, textAlign: 'right', paddingRight: 10 }}>
+              {step.metric && isLeft && (
+                <>
+                  <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
+                    {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
                   </div>
+                  <div style={{ fontSize: 9, color: '#4a6a8a' }}>{step.metric.label}</div>
+                  {mDelta != null && compLabel && (
+                    <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                      {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Bloque trapezoidal con clip-path */}
+            <div style={{ flex: 3, position: 'relative' }}>
+              <div style={{
+                clipPath: clip,
+                background: `linear-gradient(135deg, ${step.color}f0, ${step.color}99)`,
+                padding: '10px 20px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                minHeight: 46,
+              }}>
+                <span style={{ color: '#b8cfe0', fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{step.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                  <span style={{ color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: 'monospace' }}>{fmt(step.value)}</span>
+                  {delta != null && compLabel && (
+                    <span style={{ fontSize: 9, color: delta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                      {delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(1)}%
+                    </span>
+                  )}
                 </div>
               </div>
-
-              {/* Métrica derecha */}
-              <div style={{ width: 90, paddingLeft: 10, flexShrink: 0, minHeight: 44, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                {step.metric && isRight && (
-                  <>
-                    <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
-                      {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
-                    </div>
-                    <div style={{ fontSize: 9, color: '#4a6a8a', lineHeight: 1.3 }}>{step.metric.label}</div>
-                    {mDelta != null && compLabel && (
-                      <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
-                        {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
             </div>
+
+            {/* Métrica derecha */}
+            <div style={{ flex: 1, paddingLeft: 10 }}>
+              {step.metric && isRight && (
+                <>
+                  <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
+                    {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
+                  </div>
+                  <div style={{ fontSize: 9, color: '#4a6a8a' }}>{step.metric.label}</div>
+                  {mDelta != null && compLabel && (
+                    <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                      {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
           </div>
         );
       })}
