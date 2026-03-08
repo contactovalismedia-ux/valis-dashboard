@@ -183,33 +183,38 @@ function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
 
   const steps = funnels[campaignType] || funnels.ecommerce;
   const maxVal = steps[0]?.value || 1;
+  const FULL_W = 280; // ancho máximo del embudo en px
+  const MIN_W  = 100; // ancho mínimo (último paso)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
       {steps.map((step, i) => {
-        // Embudo real: el primer paso es 100%, cada siguiente se reduce proporcionalmente
-        const pct = maxVal > 0 ? Math.max((step.value / maxVal) * 100, 18) : 18;
+        const ratio = maxVal > 0 ? Math.max(step.value / maxVal, 0.18) : 0.18;
+        // Ancho superior e inferior para forma de trapecio real
+        const thisW = Math.round(MIN_W + (FULL_W - MIN_W) * ratio);
+        const nextStep = steps[i + 1];
+        const nextRatio = nextStep && maxVal > 0 ? Math.max(nextStep.value / maxVal, 0.18) : null;
+        const nextW = nextRatio != null ? Math.round(MIN_W + (FULL_W - MIN_W) * nextRatio) : thisW;
         const delta = step.comp > 0 ? ((step.value - step.comp) / step.comp * 100) : null;
         const mDelta = step.metric?.compVal > 0 ? ((step.metric.val - step.metric.compVal) / step.metric.compVal * 100) : null;
-        const metricVal = step.metric?.val;
-        const metricLabel = step.metric?.label;
-        const metricType = step.metric?.type;
+        const isLeft = i % 2 === 0 && i > 0;
+        const isRight = i % 2 === 1;
 
         return (
-          <div key={i} style={{ position: 'relative' }}>
-            {/* Fila con métrica izquierda + barra + métrica derecha */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+          <div key={i} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {/* Trapecio SVG + contenido */}
+            <div style={{ position: 'relative', width: FULL_W + 180, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
-              {/* Métrica izquierda (odd steps) */}
-              <div style={{ width: 90, textAlign: 'right', paddingRight: 10, flexShrink: 0 }}>
-                {step.metric && i % 2 === 1 && (
+              {/* Métrica izquierda */}
+              <div style={{ width: 90, textAlign: 'right', paddingRight: 10, flexShrink: 0, minHeight: 44, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                {step.metric && isLeft && (
                   <>
-                    <div style={{ fontSize: 11, color: metricVal > 0 ? '#ffb340' : '#3a5a7a', fontFamily: 'monospace', fontWeight: 700 }}>
-                      {metricVal > 0 ? fmt(metricVal, metricType) : '—'}
+                    <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
+                      {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
                     </div>
-                    <div style={{ fontSize: 9, color: '#3a5a7a' }}>{metricLabel}</div>
+                    <div style={{ fontSize: 9, color: '#4a6a8a', lineHeight: 1.3 }}>{step.metric.label}</div>
                     {mDelta != null && compLabel && (
-                      <div style={{ fontSize: 8, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                      <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
                         {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
                       </div>
                     )}
@@ -217,36 +222,45 @@ function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
                 )}
               </div>
 
-              {/* Barra del embudo centrada */}
-              <div style={{ width: `${pct}%`, minWidth: 120, maxWidth: '70%', transition: 'width 0.4s ease' }}>
-                <div style={{
-                  background: `linear-gradient(90deg, ${step.color}ee, ${step.color}88)`,
-                  borderRadius: 8, padding: '8px 14px',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  clipPath: i === steps.length - 1 ? 'none' : 'none',
-                }}>
-                  <span style={{ color: '#cde', fontSize: 10, whiteSpace: 'nowrap' }}>{step.label}</span>
-                  <div style={{ textAlign: 'right', marginLeft: 8 }}>
-                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{fmt(step.value)}</div>
+              {/* Trapecio con texto */}
+              <div style={{ position: 'relative', width: FULL_W, flexShrink: 0 }}>
+                <svg width={FULL_W} height={44} style={{ display: 'block' }}>
+                  <defs>
+                    <linearGradient id={`g${i}`} x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={step.color} stopOpacity="0.95"/>
+                      <stop offset="100%" stopColor={step.color} stopOpacity="0.6"/>
+                    </linearGradient>
+                  </defs>
+                  <polygon
+                    points={`${(FULL_W-thisW)/2},2 ${(FULL_W+thisW)/2},2 ${(FULL_W+nextW)/2},42 ${(FULL_W-nextW)/2},42`}
+                    fill={`url(#g${i})`}
+                    rx="4"
+                  />
+                </svg>
+                {/* Texto sobre el trapecio */}
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 44, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                  <span style={{ color: '#cbd8e8', fontSize: 10, letterSpacing: '0.05em' }}>{step.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ color: '#fff', fontSize: 15, fontWeight: 800, fontFamily: 'monospace' }}>{fmt(step.value)}</span>
                     {delta != null && compLabel && (
-                      <div style={{ fontSize: 8, color: delta >= 0 ? '#00d9a3' : '#ff5a5a', marginTop: 1 }}>
+                      <span style={{ fontSize: 9, color: delta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
                         {delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(1)}%
-                      </div>
+                      </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Métrica derecha (even steps > 0) */}
-              <div style={{ width: 90, paddingLeft: 10, flexShrink: 0 }}>
-                {step.metric && i % 2 === 0 && i > 0 && (
+              {/* Métrica derecha */}
+              <div style={{ width: 90, paddingLeft: 10, flexShrink: 0, minHeight: 44, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                {step.metric && isRight && (
                   <>
-                    <div style={{ fontSize: 11, color: metricVal > 0 ? '#ffb340' : '#3a5a7a', fontFamily: 'monospace', fontWeight: 700 }}>
-                      {metricVal > 0 ? fmt(metricVal, metricType) : '—'}
+                    <div style={{ fontSize: 12, color: '#ffb340', fontFamily: 'monospace', fontWeight: 700 }}>
+                      {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
                     </div>
-                    <div style={{ fontSize: 9, color: '#3a5a7a' }}>{metricLabel}</div>
+                    <div style={{ fontSize: 9, color: '#4a6a8a', lineHeight: 1.3 }}>{step.metric.label}</div>
                     {mDelta != null && compLabel && (
-                      <div style={{ fontSize: 8, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                      <div style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
                         {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
                       </div>
                     )}
@@ -568,8 +582,8 @@ export default function Dashboard() {
         const imp  = parseFloat(ins.impressions) || 1;
         const v3s  = parseFloat(ins.video_p3s_watched_actions?.find(x => x.action_type === 'video_view')?.value || 0);
         const v25  = parseFloat(ins.video_p25_watched_actions?.find(x => x.action_type === 'video_view')?.value || 0);
-        const lv   = parseFloat(ins.landing_page_views || 0);
-        const lc   = parseFloat(ins.outbound_clicks?.[0]?.value || getActionVal(ins.actions, 'link_click'));
+        const lv   = parseFloat(ins.landing_page_views || getActionVal(ins.actions, 'landing_page_view') || 0);
+        const lc   = parseFloat(ins.outbound_clicks?.[0]?.value || getActionVal(ins.actions, 'outbound_click') || getActionVal(ins.actions, 'link_click') || 0);
         const pur  = getActionVal(ins.actions, 'purchase');
         const msg  = getActionVal(ins.actions, 'onsite_conversion.messaging_conversation_started_7d');
         const leads = getActionVal(ins.actions, 'lead') + getActionVal(ins.actions, 'complete_registration');
@@ -954,15 +968,19 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </div>
               <div className="card">
-                <p style={{ fontSize: 10, color: '#4a6a8a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>Calidad del tráfico</p>
+                <p style={{ fontSize: 10, color: '#4a6a8a', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>Calidad del tráfico
+                  <span style={{ marginLeft: 12, fontSize: 9 }}><span style={{ color: '#ffb340' }}>●</span> CTR (izq)</span>
+                  <span style={{ marginLeft: 8, fontSize: 9 }}><span style={{ color: '#00d9a3' }}>●</span> {campaignType === 'reach' ? 'Hook Rate' : 'Conn. Rate'} (der)</span>
+                </p>
                 <ResponsiveContainer width="100%" height={110}>
                   <LineChart data={insights}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#0e1c2c" />
                     <XAxis dataKey="date" tick={{ fill: '#3a5070', fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                    <YAxis tick={{ fill: '#3a5070', fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} />
+                    <YAxis yAxisId="ctr" tick={{ fill: '#ffb34060', fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={v => `${v.toFixed(1)}%`} width={32} />
+                    <YAxis yAxisId="cr" orientation="right" tick={{ fill: '#00d9a360', fontSize: 9 }} tickLine={false} axisLine={false} tickFormatter={v => `${v.toFixed(0)}%`} width={36} />
                     <Tooltip content={<ChartTooltip />} />
-                    <Line type="monotone" dataKey="ctr" stroke="#ffb340" strokeWidth={2} dot={false} name="CTR" />
-                    <Line type="monotone" dataKey={campaignType === 'reach' ? 'hookRate' : 'connectionRate'} stroke="#00d9a3" strokeWidth={2} dot={false} name={campaignType === 'reach' ? 'Hook Rate' : 'Conn. Rate'} />
+                    <Line yAxisId="ctr" type="monotone" dataKey="ctr" stroke="#ffb340" strokeWidth={2} dot={false} name="CTR" />
+                    <Line yAxisId="cr" type="monotone" dataKey={campaignType === 'reach' ? 'hookRate' : 'connectionRate'} stroke="#00d9a3" strokeWidth={2} dot={false} name={campaignType === 'reach' ? 'Hook Rate' : 'Conn. Rate'} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
