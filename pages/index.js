@@ -472,8 +472,19 @@ export default function Dashboard() {
   function processRow(d) {
     const imp = parseFloat(d.impressions) || 1;
     const video3s = parseFloat(d.video_p3s_watched_actions?.find(a => a.action_type === 'video_view')?.value || 0);
-    const landingViews = parseFloat(d.landing_page_views || 0);
-    const linkClicks   = parseFloat(d.outbound_clicks?.[0]?.value || getActionVal(d.actions, 'link_click') || getActionVal(d.actions, 'link_click_unique'));
+    // landing_page_views: campo directo si viene, sino desde array actions (action_type='landing_page_view')
+    const landingViews = parseFloat(
+      d.landing_page_views ||
+      getActionVal(d.actions, 'landing_page_view') ||
+      0
+    );
+    // outbound_clicks: campo directo si viene, sino desde actions
+    const linkClicks = parseFloat(
+      d.outbound_clicks?.[0]?.value ||
+      getActionVal(d.actions, 'outbound_click') ||
+      getActionVal(d.actions, 'link_click') ||
+      0
+    );
     const purchases    = getActionVal(d.actions, 'purchase');
     const leads        = getActionVal(d.actions, 'lead') + getActionVal(d.actions, 'complete_registration');
     const spend        = parseFloat(d.spend) || 0;
