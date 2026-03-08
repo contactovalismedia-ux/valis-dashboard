@@ -188,7 +188,10 @@ function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: '100%' }}>
       {steps.map((step, i) => {
         // Cada paso es un % del ancho del contenedor, centrado
-        const pct = maxVal > 0 ? Math.max((step.value / maxVal) * 100, 30) : 30;
+        // Escala logarítmica para que la diferencia visual sea legible aunque los datos sean extremos
+        const rawRatio = maxVal > 0 ? step.value / maxVal : 1;
+        const logRatio = rawRatio > 0 ? (Math.log(rawRatio * 99 + 1) / Math.log(100)) : 0;
+        const pct = Math.round(55 + logRatio * 45); // rango 55%–100%
         const delta = step.comp > 0 ? ((step.value - step.comp) / step.comp * 100) : null;
         const mDelta = step.metric?.compVal > 0 ? ((step.metric.val - step.metric.compVal) / step.metric.compVal * 100) : null;
         const isLeft  = i % 2 === 0 && i > 0;
