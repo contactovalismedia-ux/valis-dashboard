@@ -185,50 +185,73 @@ function MarketingFunnel({ totals, compTotals, campaignType, compLabel }) {
   const maxVal = steps[0]?.value || 1;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {steps.map((step, i) => {
-        // Embudo real: ancho proporcional al valor, mínimo 20%
-        const pct = maxVal > 0 ? Math.max((step.value / maxVal) * 100, 20) : 20;
-        // Delta vs comparación
+        // Embudo real: el primer paso es 100%, cada siguiente se reduce proporcionalmente
+        const pct = maxVal > 0 ? Math.max((step.value / maxVal) * 100, 18) : 18;
         const delta = step.comp > 0 ? ((step.value - step.comp) / step.comp * 100) : null;
-        // Delta de la métrica entre pasos
         const mDelta = step.metric?.compVal > 0 ? ((step.metric.val - step.metric.compVal) / step.metric.compVal * 100) : null;
+        const metricVal = step.metric?.val;
+        const metricLabel = step.metric?.label;
+        const metricType = step.metric?.type;
 
         return (
-          <div key={i}>
-            {/* Métrica entre pasos (arriba de cada barra excepto la primera) */}
-            {step.metric && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 3, marginTop: 2 }}>
-                <span style={{ fontSize: 10, color: '#3a5a7a' }}>↓</span>
-                <span style={{ fontSize: 11, color: step.metric.val > 0 ? '#ffb340' : '#3a5a7a', fontFamily: 'monospace', fontWeight: 600 }}>
-                  {step.metric.label}: {step.metric.val > 0 ? fmt(step.metric.val, step.metric.type) : '—'}
-                </span>
-                {mDelta != null && compLabel && (
-                  <span style={{ fontSize: 9, color: mDelta >= 0 ? '#00d9a360' : '#ff5a5a60' }}>
-                    {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}% {compLabel}
-                  </span>
+          <div key={i} style={{ position: 'relative' }}>
+            {/* Fila con métrica izquierda + barra + métrica derecha */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+
+              {/* Métrica izquierda (odd steps) */}
+              <div style={{ width: 90, textAlign: 'right', paddingRight: 10, flexShrink: 0 }}>
+                {step.metric && i % 2 === 1 && (
+                  <>
+                    <div style={{ fontSize: 11, color: metricVal > 0 ? '#ffb340' : '#3a5a7a', fontFamily: 'monospace', fontWeight: 700 }}>
+                      {metricVal > 0 ? fmt(metricVal, metricType) : '—'}
+                    </div>
+                    <div style={{ fontSize: 9, color: '#3a5a7a' }}>{metricLabel}</div>
+                    {mDelta != null && compLabel && (
+                      <div style={{ fontSize: 8, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                        {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
-            )}
 
-            {/* Barra del embudo */}
-            <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
-              <div style={{
-                width: `${pct}%`, minWidth: 160,
-                background: `linear-gradient(90deg, ${step.color}ee, ${step.color}88)`,
-                borderRadius: 10, padding: '9px 14px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                transition: 'width 0.4s ease',
-              }}>
-                <span style={{ color: '#cde', fontSize: 11 }}>{step.label}</span>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{fmt(step.value)}</div>
-                  {delta != null && compLabel && (
-                    <div style={{ fontSize: 9, color: delta >= 0 ? '#00d9a380' : '#ff5a5a80', marginTop: 1 }}>
-                      {delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(1)}%
-                    </div>
-                  )}
+              {/* Barra del embudo centrada */}
+              <div style={{ width: `${pct}%`, minWidth: 120, maxWidth: '70%', transition: 'width 0.4s ease' }}>
+                <div style={{
+                  background: `linear-gradient(90deg, ${step.color}ee, ${step.color}88)`,
+                  borderRadius: 8, padding: '8px 14px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  clipPath: i === steps.length - 1 ? 'none' : 'none',
+                }}>
+                  <span style={{ color: '#cde', fontSize: 10, whiteSpace: 'nowrap' }}>{step.label}</span>
+                  <div style={{ textAlign: 'right', marginLeft: 8 }}>
+                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{fmt(step.value)}</div>
+                    {delta != null && compLabel && (
+                      <div style={{ fontSize: 8, color: delta >= 0 ? '#00d9a3' : '#ff5a5a', marginTop: 1 }}>
+                        {delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(1)}%
+                      </div>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Métrica derecha (even steps > 0) */}
+              <div style={{ width: 90, paddingLeft: 10, flexShrink: 0 }}>
+                {step.metric && i % 2 === 0 && i > 0 && (
+                  <>
+                    <div style={{ fontSize: 11, color: metricVal > 0 ? '#ffb340' : '#3a5a7a', fontFamily: 'monospace', fontWeight: 700 }}>
+                      {metricVal > 0 ? fmt(metricVal, metricType) : '—'}
+                    </div>
+                    <div style={{ fontSize: 9, color: '#3a5a7a' }}>{metricLabel}</div>
+                    {mDelta != null && compLabel && (
+                      <div style={{ fontSize: 8, color: mDelta >= 0 ? '#00d9a3' : '#ff5a5a' }}>
+                        {mDelta >= 0 ? '↑' : '↓'}{Math.abs(mDelta).toFixed(1)}%
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -355,14 +378,23 @@ function AdsTable({ ads, campaignType, thresholds }) {
 
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
+  const pctKeys = ['ctr','hookRate','connectionRate','video25'];
   return (
     <div style={{ background: '#0a0f1a', border: '1px solid #1e2d40', borderRadius: 8, padding: '10px 14px', fontFamily: 'monospace', fontSize: 12 }}>
       <p style={{ color: '#5a7a9a', marginBottom: 6, fontSize: 11 }}>{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color || p.fill, margin: '2px 0' }}>
-          {p.name}: <strong style={{ color: '#e8f0fe' }}>{p.value != null ? Number(p.value).toLocaleString('es-419') : '—'}</strong>
-        </p>
-      ))}
+      {payload.map((p, i) => {
+        const isPct = pctKeys.includes(p.dataKey);
+        const val = p.value != null
+          ? isPct ? `${Number(p.value).toFixed(2)}%`
+          : Number(p.value) > 1000 ? `$${Number(p.value).toLocaleString('es-419')}`
+          : Number(p.value).toFixed(2)
+          : '—';
+        return (
+          <p key={i} style={{ color: p.color || p.fill, margin: '2px 0' }}>
+            {p.name}: <strong style={{ color: '#e8f0fe' }}>{val}</strong>
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -511,8 +543,12 @@ export default function Dashboard() {
       const adFieldsMid   = 'name,status,creative{thumbnail_url,instagram_permalink_url},insights{spend,reach,clicks,ctr,purchase_roas,actions,impressions,outbound_clicks,frequency}';
       const adFieldsBasic = 'name,status,creative{thumbnail_url,instagram_permalink_url},insights{spend,reach,clicks,ctr,purchase_roas,actions,impressions,frequency}';
       let data;
+      const adDateP = { ...getDateParams(), limit: '50' };
+      if (selectedCampaigns.length > 0 && selectedCampaigns.length < campaigns.length) {
+        adDateP.filtering = JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: selectedCampaigns }]);
+      }
       for (const adFields of [adFieldsFull, adFieldsMid, adFieldsBasic]) {
-        try { data = await metaCall(`/act_${accId}/ads`, { fields: adFields, limit: '50', ...getDateParams() }, token); break; }
+        try { data = await metaCall(`/act_${accId}/ads`, { fields: adFields, ...adDateP }, token); break; }
         catch (_) { continue; }
       }
       if (!data) return;
@@ -547,7 +583,7 @@ export default function Dashboard() {
       }).sort((a, b) => b.roas - a.roas || b.spend - a.spend).slice(0, 15);
       setBestAds(ads);
     } catch (_) {}
-  }, [token, datePreset, useCustom, customFrom, customTo]);
+  }, [token, datePreset, useCustom, customFrom, customTo, selectedCampaigns, campaigns.length]);
 
   const loadCampaigns = useCallback(async (accId) => {
     if (!accId || !token) return;
@@ -557,7 +593,7 @@ export default function Dashboard() {
       setCampaigns(camps);
       setSelectedCampaigns(camps.map(c => c.id));
     } catch (_) {}
-  }, [token, datePreset, useCustom, customFrom, customTo]);
+  }, [token, datePreset, useCustom, customFrom, customTo, selectedCampaigns, campaigns.length]);
 
   function refresh(accId) {
     loadInsights(accId);
@@ -623,12 +659,14 @@ export default function Dashboard() {
     return parseFloat(((curr - prev) / prev * 100).toFixed(1));
   }
   const deltas = {
-    purchases: pctDelta(T.purchases, Tc.purchases),
-    cpa:       T.purchases > 0 && Tc.purchases > 0 ? pctDelta(T.spend / T.purchases, Tc.spend / Tc.purchases) : null,
-    roas:      pctDelta(avgRoas, cAvgRoas),
-    messaging: pctDelta(T.messaging, Tc.messaging),
-    leads:     pctDelta(T.leads, Tc.leads),
-    hookRate:  pctDelta(T.impressions > 0 ? T.video3s / T.impressions * 100 : 0, Tc.impressions > 0 ? Tc.video3s / Tc.impressions * 100 : 0),
+    purchases:    pctDelta(T.purchases, Tc.purchases),
+    cpa:          T.purchases > 0 && Tc.purchases > 0 ? pctDelta(T.spend / T.purchases, Tc.spend / Tc.purchases) : null,
+    roas:         pctDelta(avgRoas, cAvgRoas),
+    messaging:    pctDelta(T.messaging, Tc.messaging),
+    costPerConv:  T.messaging > 0 && Tc.messaging > 0 ? pctDelta(T.spend / T.messaging, Tc.spend / Tc.messaging) : null,
+    leads:        pctDelta(T.leads, Tc.leads),
+    cpl:          T.leads > 0 && Tc.leads > 0 ? pctDelta(T.spend / T.leads, Tc.spend / Tc.leads) : null,
+    hookRate:     pctDelta(T.impressions > 0 ? T.video3s / T.impressions * 100 : 0, Tc.impressions > 0 ? Tc.video3s / Tc.impressions * 100 : 0),
   };
 
   const currencyNames = { USD: 'Dólar americano', CLP: 'Peso chileno', COP: 'Peso colombiano', EUR: 'Euro', MXN: 'Peso mexicano', ARS: 'Peso argentino', BRL: 'Real brasileño' };
@@ -810,7 +848,7 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 12 }}>
                 <KpiCard label="Inversión Total" value={T.spend} type="currency" color="#00d9a3" icon="💰" currency={currency} />
                 <KpiCard label="Conversaciones" value={T.messaging} color="#25D366" icon="💬" delta={deltas.messaging} compLabel={compLabel} />
-                <KpiCard label="Costo por Conversación" value={avgCostConv} type="currency" color="#4a9eff" icon="🎯" invertDelta compLabel={compLabel} />
+                <KpiCard label="Costo por Conversación" value={avgCostConv} type="currency" color="#4a9eff" icon="🎯" invertDelta delta={deltas.costPerConv} compLabel={compLabel} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }}>
                 <KpiCard label="% Conversación / Clic" value={T.linkClicks > 0 ? T.messaging / T.linkClicks * 100 : 0} type="percent" color="#ffb340" icon="📊" sub="Conversaciones / Clics en enlace" />
@@ -825,7 +863,7 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 12 }}>
                 <KpiCard label="Inversión Total" value={T.spend} type="currency" color="#00d9a3" icon="💰" currency={currency} />
                 <KpiCard label="Leads / Registros" value={T.leads} color="#a855f7" icon="📋" sub="lead + complete_registration" delta={deltas.leads} compLabel={compLabel} />
-                <KpiCard label="Costo por Lead (CPL)" value={avgCpl} type="currency" color="#4a9eff" icon="🎯" invertDelta compLabel={compLabel} />
+                <KpiCard label="Costo por Lead (CPL)" value={avgCpl} type="currency" color="#4a9eff" icon="🎯" invertDelta delta={deltas.cpl} compLabel={compLabel} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1,1fr)', gap: 12 }}>
                 <KpiCard label="% Conversión Página / Formulario" value={T.linkClicks > 0 ? T.leads / T.linkClicks * 100 : 0} type="percent" color="#ffb340" icon="📊" sub="(lead + complete_registration) / Clics en enlace" />
