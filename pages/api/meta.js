@@ -1,20 +1,21 @@
 // pages/api/meta.js
-// Este endpoint corre en el SERVIDOR (no en el browser)
-// Por eso Meta no bloquea las llamadas — no hay problema de CORS
+// Corre en el servidor — sin problemas de CORS
+// Token: primero usa el que viene del cliente, si no hay usa META_TOKEN del entorno (Vercel env var)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { path, params, token } = req.body;
+  const { path, params, token: clientToken } = req.body;
+  const token = clientToken || process.env.META_TOKEN;
 
   if (!token || !path) {
     return res.status(400).json({ error: 'Missing token or path' });
   }
 
   try {
-    const url = new URL(`https://graph.facebook.com/v19.0${path}`);
+    const url = new URL(`https://graph.facebook.com/v21.0${path}`);
     url.searchParams.set('access_token', token);
 
     if (params) {
